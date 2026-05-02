@@ -1,12 +1,38 @@
 <template>
   <AppLayout>
     <div class="chat-list-page">
+      <!-- 页面标题 -->
+      <div class="page-header">
+        <h1 class="page-title">消息</h1>
+      </div>
+
+      <!-- 加载状态 -->
       <template v-if="loading">
-        <el-skeleton :rows="5" animated />
+        <div class="skeleton-list">
+          <div v-for="i in 5" :key="i" class="skeleton-item">
+            <div class="skeleton-avatar skeleton"></div>
+            <div class="skeleton-content">
+              <div class="skeleton-name skeleton"></div>
+              <div class="skeleton-message skeleton"></div>
+            </div>
+          </div>
+        </div>
       </template>
+
+      <!-- 空状态 -->
       <template v-else-if="conversations.length === 0">
-        <el-empty description="暂无消息" />
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+          </div>
+          <p class="empty-text">暂无消息</p>
+          <p class="empty-hint">去逛逛感兴趣的宝贝吧</p>
+        </div>
       </template>
+
+      <!-- 会话列表 -->
       <template v-else>
         <div class="conversation-list">
           <div
@@ -16,19 +42,32 @@
             @click="goToDetail(conv)"
           >
             <div class="avatar-wrapper">
-              <el-avatar :size="52" :src="conv.user2Avatar" />
-              <div v-if="conv.unreadCount > 0" class="badge">
+              <img 
+                v-if="conv.user2Avatar" 
+                :src="conv.user2Avatar" 
+                class="avatar-img" 
+                alt=""
+              />
+              <div v-else class="avatar-placeholder">
+                {{ (conv.user2Name || '用户').charAt(0) }}
+              </div>
+              <div v-if="conv.unreadCount > 0" class="unread-badge">
                 {{ conv.unreadCount > 99 ? '99+' : conv.unreadCount }}
               </div>
             </div>
-            <div class="info">
-              <div class="top">
-                <span class="name">{{ conv.user2Name }}</span>
-                <span class="time">{{ formatTime(conv.lastMessageAt) }}</span>
+            <div class="conv-content">
+              <div class="conv-header">
+                <span class="conv-name">{{ conv.user2Name || '校园用户' }}</span>
+                <span class="conv-time">{{ formatTime(conv.lastMessageAt) }}</span>
               </div>
-              <div class="bottom">
-                <span class="last-message">{{ conv.lastMessage || '暂无消息' }}</span>
+              <div class="conv-message">
+                <span class="message-text">{{ conv.lastMessage || '暂无消息' }}</span>
               </div>
+            </div>
+            <div class="conv-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
             </div>
           </div>
         </div>
@@ -119,69 +158,211 @@ onUnmounted(() => {
 
 <style scoped>
 .chat-list-page {
-  padding: var(--spacing-lg);
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  padding-bottom: calc(var(--tabbar-height) + var(--safe-area-bottom) + var(--spacing-xl));
 }
+
+/* 页面头部 */
+.page-header {
+  background: var(--color-card);
+  padding: var(--spacing-lg) var(--padding-page);
+  box-shadow: var(--shadow-xs);
+}
+
+.page-title {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+/* 骨架屏 */
+.skeleton-list {
+  background: var(--color-card);
+  margin-top: var(--spacing-sm);
+}
+
+.skeleton-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg) var(--padding-page);
+}
+
+.skeleton-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-circle);
+  flex-shrink: 0;
+}
+
+.skeleton-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.skeleton-name {
+  width: 80px;
+  height: 18px;
+}
+
+.skeleton-message {
+  width: 60%;
+  height: 16px;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-xxxl) var(--spacing-xl);
+}
+
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  color: var(--color-text-quaternary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.empty-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.empty-text {
+  font-size: var(--font-size-body);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.empty-hint {
+  font-size: var(--font-size-small);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+/* 会话列表 */
 .conversation-list {
-  margin-top: var(--spacing-md);
+  background: var(--color-card);
+  margin-top: var(--spacing-sm);
 }
+
 .conversation-item {
   display: flex;
   align-items: center;
-  padding: var(--spacing-md) 0;
-  border-bottom: 1px solid var(--color-border);
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg) var(--padding-page);
   cursor: pointer;
-  transition: background var(--duration-fast);
+  transition: all var(--duration-fast);
+  border-bottom: 1px solid var(--color-divider);
 }
+
+.conversation-item:last-child {
+  border-bottom: none;
+}
+
 .conversation-item:hover {
-  background: rgba(0,0,0,0.02);
+  background: var(--color-bg);
 }
+
+.conversation-item:active {
+  background: var(--color-border-light);
+}
+
+/* 头像 */
 .avatar-wrapper {
   position: relative;
   flex-shrink: 0;
 }
-.badge {
+
+.avatar-img {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-circle);
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-circle);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+  font-weight: var(--font-weight-semibold);
+}
+
+.unread-badge {
   position: absolute;
-  top: -2px;
-  right: -2px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 9px;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
   background: var(--color-danger);
   color: #fff;
   font-size: 11px;
-  line-height: 18px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 20px;
   text-align: center;
+  border: 2px solid var(--color-card);
 }
-.info {
+
+/* 内容区域 */
+.conv-content {
   flex: 1;
-  margin-left: var(--spacing-md);
-  overflow: hidden;
+  min-width: 0;
 }
-.top {
+
+.conv-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-xs);
 }
-.name {
-  font-size: 16px;
-  font-weight: 500;
+
+.conv-name {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
 }
-.time {
-  font-size: 12px;
+
+.conv-time {
+  font-size: var(--font-size-mini);
   color: var(--color-text-tertiary);
 }
-.bottom {
-  overflow: hidden;
+
+.conv-message {
+  display: flex;
+  align-items: center;
 }
-.last-message {
-  display: block;
-  font-size: 14px;
+
+.message-text {
+  font-size: var(--font-size-small);
   color: var(--color-text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.conv-arrow {
+  width: 18px;
+  height: 18px;
+  color: var(--color-text-quaternary);
+  flex-shrink: 0;
+}
+
+.conv-arrow svg {
+  width: 100%;
+  height: 100%;
 }
 </style>

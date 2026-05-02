@@ -1,15 +1,20 @@
 <template>
   <AppLayout>
     <div class="category-page">
-      <div class="category-header">
-        <div class="back-btn" @click="goBack">
-          <el-icon><ArrowLeft /></el-icon>
+      <!-- 顶部标题 -->
+      <header class="category-header">
+        <div class="header-btn" @click="goBack">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
         </div>
-        <span class="title">分类</span>
-        <div style="width: 24px"></div>
-      </div>
+        <h1 class="header-title">商品分类</h1>
+        <div class="header-placeholder"></div>
+      </header>
+
       <div class="category-content">
-        <div class="category-nav">
+        <!-- 左侧分类导航 -->
+        <div class="category-sidebar">
           <div
             v-for="category in categories"
             :key="category.id"
@@ -17,31 +22,50 @@
             :class="{ active: activeCategoryId === category.id }"
             @click="selectCategory(category.id)"
           >
-            {{ category.name }}
+            <span class="nav-text">{{ category.name }}</span>
+            <div class="nav-indicator"></div>
           </div>
         </div>
-        <div class="category-products">
-          <div v-if="activeCategory && activeCategory.children?.length" class="sub-category">
-            <div
-              v-for="sub in activeCategory.children"
-              :key="sub.id"
-              class="sub-item"
-              :class="{ active: activeSubCategoryId === sub.id }"
-              @click="selectSubCategory(sub.id)"
-            >
-              {{ sub.name }}
+
+        <!-- 右侧内容区 -->
+        <div class="category-main">
+          <!-- 子分类 -->
+          <div v-if="activeCategory && activeCategory.children?.length" class="sub-category-section">
+            <div class="sub-category-grid">
+              <div
+                v-for="sub in activeCategory.children"
+                :key="sub.id"
+                class="sub-item"
+                :class="{ active: activeSubCategoryId === sub.id }"
+                @click="selectSubCategory(sub.id)"
+              >
+                {{ sub.name }}
+              </div>
             </div>
           </div>
-          <ProductList
-            :products="products"
-            :loading="loading"
-            :no-more="noMore"
-            :favorites="favorites"
-            @load-more="loadMore"
-            @favorite="(id) => favorites.add(id)"
-            @unfavorite="(id) => favorites.delete(id)"
-          />
-          <el-empty v-if="!loading && !products.length" description="该分类暂无商品" />
+
+          <!-- 商品列表 -->
+          <div class="products-area">
+            <ProductList
+              :products="products"
+              :loading="loading"
+              :no-more="noMore"
+              :favorites="favorites"
+              @load-more="loadMore"
+              @favorite="(id) => favorites.add(id)"
+              @unfavorite="(id) => favorites.delete(id)"
+            />
+            
+            <!-- 空状态 -->
+            <div v-if="!loading && !products.length" class="empty-state">
+              <div class="empty-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                </svg>
+              </div>
+              <p class="empty-text">该分类暂无商品</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -51,7 +75,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ArrowLeft } from '@element-plus/icons-vue'
 import AppLayout from '@/components/common/AppLayout.vue'
 import ProductList from '@/components/business/ProductList.vue'
 import { getProducts, getCategories } from '@/api/modules/product'
@@ -84,7 +107,6 @@ const loadCategories = async () => {
     if (categories.value.length) {
       const initialId = route.params.id ? parseInt(route.params.id) : categories.value[0].id
       activeCategoryId.value = initialId
-      // 加载对应分类的商品
       loadProducts(true)
     }
   } catch (e) {
@@ -145,19 +167,16 @@ onMounted(() => {
   loadCategories()
 })
 
-// 监听路由参数变化
 watch(() => route.params.id, (newId) => {
   if (newId) {
     const id = parseInt(newId)
     if (categories.value.length) {
-      // 分类已经加载，直接选择
       activeCategoryId.value = id
       activeSubCategoryId.value = null
       page.value = 1
       noMore.value = false
       loadProducts(true)
     } else {
-      // 分类还未加载，重新加载分类
       loadCategories()
     }
   }
@@ -172,82 +191,189 @@ watch(() => route.params.id, (newId) => {
   flex-direction: column;
 }
 
+/* 顶部标题 */
 .category-header {
-  background: var(--color-card);
-  padding: var(--spacing-md);
+  height: var(--navbar-height);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--color-border);
+  padding: 0 var(--spacing-lg);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-xs);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.back-btn {
+.header-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-circle);
   cursor: pointer;
+  transition: all var(--duration-fast);
+  margin-left: -8px;
+}
+
+.header-btn:hover {
+  background: var(--color-bg);
+}
+
+.header-btn:active {
+  transform: scale(0.92);
+}
+
+.header-btn svg {
+  width: 22px;
+  height: 22px;
   color: var(--color-text-primary);
 }
 
-.title {
-  font-size: 16px;
-  font-weight: 600;
+.header-title {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
+  margin: 0;
 }
 
+.header-placeholder {
+  width: 36px;
+}
+
+/* 内容区域 */
 .category-content {
   flex: 1;
   display: flex;
   overflow: hidden;
 }
 
-.category-nav {
-  width: 90px;
-  background: var(--color-bg);
+/* 左侧导航 */
+.category-sidebar {
+  width: 88px;
+  background: var(--color-card);
   overflow-y: auto;
   flex-shrink: 0;
+  border-right: 1px solid var(--color-divider);
 }
 
 .nav-item {
-  padding: var(--spacing-md);
-  font-size: 14px;
-  color: var(--color-text-secondary);
+  position: relative;
+  padding: var(--spacing-lg) var(--spacing-sm);
   text-align: center;
   cursor: pointer;
-  border-bottom: 1px solid var(--color-border);
+  transition: all var(--duration-fast);
+}
+
+.nav-item:active {
+  background: var(--color-border-light);
+}
+
+.nav-text {
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+  transition: all var(--duration-fast);
 }
 
 .nav-item.active {
-  background: var(--color-card);
-  color: var(--color-primary);
-  font-weight: 600;
-  border-left: 3px solid var(--color-primary);
+  background: var(--color-bg);
 }
 
-.category-products {
+.nav-item.active .nav-text {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.nav-indicator {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  background: var(--color-primary);
+  border-radius: 0 2px 2px 0;
+  transition: all var(--duration-fast);
+}
+
+.nav-item.active .nav-indicator {
+  height: 20px;
+}
+
+/* 右侧主内容 */
+.category-main {
   flex: 1;
-  background: var(--color-card);
-  overflow: hidden;
+  background: var(--color-bg);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
 
-.sub-category {
+/* 子分类 */
+.sub-category-section {
+  background: var(--color-card);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.sub-category-grid {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-sm);
-  padding: var(--spacing-md);
-  border-bottom: 1px solid var(--color-border);
 }
 
 .sub-item {
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-lg);
   background: var(--color-bg);
-  border-radius: var(--radius-button);
-  font-size: 13px;
+  border-radius: var(--radius-xl);
+  font-size: var(--font-size-small);
   color: var(--color-text-secondary);
   cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.sub-item:active {
+  transform: scale(0.97);
 }
 
 .sub-item.active {
   background: var(--color-primary-bg);
   color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* 商品区域 */
+.products-area {
+  flex: 1;
+  padding: var(--spacing-md);
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-xxxl) var(--spacing-xl);
+}
+
+.empty-icon {
+  width: 64px;
+  height: 64px;
+  color: var(--color-text-quaternary);
+  margin-bottom: var(--spacing-md);
+}
+
+.empty-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.empty-text {
+  font-size: var(--font-size-body);
+  color: var(--color-text-tertiary);
+  margin: 0;
 }
 </style>
