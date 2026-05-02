@@ -13,25 +13,42 @@
       </template>
       <template v-else>
         <div v-for="i in 4" :key="i" class="skeleton-card">
-          <el-skeleton :rows="4" animated />
+          <div class="skeleton-image"></div>
+          <div class="skeleton-content">
+            <div class="skeleton-line long"></div>
+            <div class="skeleton-line short"></div>
+          </div>
         </div>
       </template>
     </div>
-    <div v-if="loading && !noMore" class="loading-more">
-      <el-icon class="loading-icon is-loading"><Loading /></el-icon>
+
+    <!-- 加载状态 -->
+    <div v-if="loading && !noMore && products.length" class="loading-more">
+      <div class="loading-spinner"></div>
       <span>加载中...</span>
     </div>
+
+    <!-- 无更多数据 -->
     <div v-else-if="noMore && products.length" class="no-more">
-      <span>没有更多了</span>
+      <div class="divider"></div>
+      <span>已经到底了</span>
+      <div class="divider"></div>
     </div>
-    <el-empty v-if="!loading && !products.length" description="暂无商品" />
+
+    <!-- 空状态 -->
+    <div v-if="!loading && !products.length" class="empty-state">
+      <div class="empty-icon">
+        <el-icon :size="48"><Box /></el-icon>
+      </div>
+      <p class="empty-text">暂无商品</p>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Loading } from '@element-plus/icons-vue'
+import { Box } from '@element-plus/icons-vue'
 import ProductCard from '@/components/common/ProductCard.vue'
 import { favoriteProduct, unfavoriteProduct } from '@/api/modules/product'
 
@@ -127,22 +144,112 @@ onUnmounted(() => {
 
 .skeleton-card {
   background: var(--color-card);
-  border-radius: var(--radius-card);
-  padding: var(--spacing-sm);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
-.loading-more,
-.no-more {
+.skeleton-image {
+  aspect-ratio: 1;
+  background: linear-gradient(90deg, var(--color-bg) 25%, var(--color-bg-secondary) 50%, var(--color-bg) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.skeleton-content {
+  padding: var(--spacing-md);
+}
+
+.skeleton-line {
+  height: 14px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--color-bg) 25%, var(--color-bg-secondary) 50%, var(--color-bg) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  margin-bottom: var(--spacing-sm);
+}
+
+.skeleton-line.long {
+  width: 100%;
+}
+
+.skeleton-line.short {
+  width: 60%;
+  margin-bottom: 0;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.loading-more {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: var(--spacing-lg);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xl);
   color: var(--color-text-secondary);
   font-size: 14px;
 }
 
-.loading-icon {
-  font-size: 16px;
+.loading-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: var(--radius-full);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.no-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-xl);
+  color: var(--color-text-tertiary);
+  font-size: 13px;
+}
+
+.divider {
+  width: 40px;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xxl);
+}
+
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.empty-text {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  margin: 0;
 }
 </style>

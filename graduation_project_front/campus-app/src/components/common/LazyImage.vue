@@ -4,18 +4,21 @@
       ref="imgRef"
       :src="loaded ? src : placeholder"
       :alt="alt"
-      :class="{ 'img-loaded': loaded }"
+      :class="{ 'img-loaded': loaded, 'img-error': hasError }"
       @load="onLoad"
       @error="onError"
     />
-    <div v-if="!loaded" class="img-placeholder">
-      <el-icon class="placeholder-icon"><Picture /></el-icon>
+    <div v-if="!loaded && !hasError" class="img-placeholder">
+      <div class="loading-shimmer"></div>
+    </div>
+    <div v-if="hasError" class="img-error-state">
+      <el-icon :size="28"><Picture /></el-icon>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { Picture } from '@element-plus/icons-vue'
 
 const props = defineProps({
@@ -27,14 +30,6 @@ const props = defineProps({
     type: String,
     default: ''
   },
-  width: {
-    type: [Number, String],
-    default: '100%'
-  },
-  height: {
-    type: [Number, String],
-    default: '100%'
-  },
   aspectRatio: {
     type: String,
     default: '1'
@@ -43,15 +38,18 @@ const props = defineProps({
 
 const imgRef = ref(null)
 const loaded = ref(false)
+const hasError = ref(false)
 const observer = ref(null)
-const placeholder = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNlYWVhZWEiLz48L3N2Zz4='
+const placeholder = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNmMGYwZjAiLz48L3N2Zz4='
 
 const onLoad = () => {
   loaded.value = true
+  hasError.value = false
 }
 
 const onError = () => {
   loaded.value = false
+  hasError.value = true
 }
 
 onMounted(() => {
@@ -86,7 +84,8 @@ onUnmounted(() => {
   position: relative;
   width: 100%;
   overflow: hidden;
-  border-radius: var(--radius-card, 12px);
+  border-radius: inherit;
+  background: var(--color-bg);
 }
 
 .lazy-image img {
@@ -102,20 +101,48 @@ onUnmounted(() => {
   opacity: 1;
 }
 
+.lazy-image .img-error {
+  opacity: 0;
+}
+
 .img-placeholder {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f0f0f0;
+  background: var(--color-bg);
 }
 
-.placeholder-icon {
-  font-size: 32px;
+.loading-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    var(--color-bg) 25%,
+    var(--color-bg-secondary) 50%,
+    var(--color-bg) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.img-error-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-secondary);
   color: var(--color-text-tertiary);
 }
 </style>
